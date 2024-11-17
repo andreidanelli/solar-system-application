@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <title>Sistema Solar (Three.js)</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="css/base.css"/>
+</head>
+<body>
+
+<script src="js/Three.js"></script>
+<script src="js/OrbitControls.js"></script>
+
+<div id="ThreeJS" style="position: absolute; width: 100%; height: 100%;"></div>
+
+<script>
+    //variáveis globais
+    let scene, camera, renderer, controls, clock;
+    const planetas = [
+        {nome: 'Sol', distancia: 0, velocidade: 0, tamanho: 100, textura: 'images/sol_texture.jpg', rotacao: 0.01},
+        {nome: 'Mercúrio', distancia: 0.39, velocidade: 47.87, tamanho: 0.35, textura: 'images/mercury_texture.jpg', rotacao: 0.004},
+        {nome: 'Vênus', distancia: 0.72, velocidade: 35.02, tamanho: 0.87, textura: 'images/venus_texture.jpg', rotacao: 0.002},
+        {nome: 'Terra', distancia: 1.00, velocidade: 29.78, tamanho: 0.92, textura: 'images/earth_texture.jpg', rotacao: 0.01},
+        {nome: 'Marte', distancia: 1.52, velocidade: 24.07, tamanho: 0.49, textura: 'images/mars_texture.jpg', rotacao: 0.008},
+        {nome: 'Júpiter', distancia: 5.20, velocidade: 13.07, tamanho: 10.05, textura: 'images/jupiter_texture.jpg', rotacao: 0.02},
+        {nome: 'Saturno', distancia: 9.58, velocidade: 9.69, tamanho: 8.37, textura: 'images/saturno_texture.jpg', rotacao: 0.018},
+        {nome: 'Urano', distancia: 19.22, velocidade: 6.81, tamanho: 3.64, textura: 'images/urano_texture.jpg', rotacao: 0.016},
+        {nome: 'Netuno', distancia: 30.05, velocidade: 5.43, tamanho: 3.54, textura: 'images/netuno_texture.jpg', rotacao: 0.015},
+    ];
+    const planetasMeshes = [];
+    let luaMesh = null; //variável para armazenar a Lua
+
+    //variáveis globais adicionais para o raycaster
+    let raycaster = new THREE.Raycaster();
+    let mouse = new THREE.Vector2();
+    let selectedPlanet = null;
+
+    //função de inicialização
+    function init() {
+        scene = new THREE.Scene();
+
+        //configuração da câmera
+        const SCREEN_WIDTH = window.innerWidth;
+        const SCREEN_HEIGHT = window.innerHeight;
+        camera = new THREE.PerspectiveCamera(70, SCREEN_WIDTH / SCREEN_HEIGHT, 0.1, 20000);
+        camera.position.set(0, 1000, 2000);
+        scene.add(camera);
+
+        //renderizador
+        renderer = new THREE.WebGLRenderer({antialias: true});
+        renderer.setSize(SCREEN_WIDTH, SCREEN_HEIGHT);
+        document.getElementById('ThreeJS').appendChild(renderer.domElement);
+
+        //controle de órbita
+        controls = new THREE.OrbitControls(camera, renderer.domElement);
+
+        //luzes
+        const light = new THREE.PointLight(0xffffff);
+        light.position.set(0, 0, 0);
+        scene.add(light);
+        
+        //carregar texturas
+        const textureLoader = new THREE.TextureLoader();
+
+        //adicionando o sol
+        const tamanhoSol = planetas[0].tamanho;
+        const raioSol = tamanhoSol * 10;
+        textureLoader.load('images/sol_texture.jpg', function(texture) {
+            // Cria a esfera com a textura após o carregamento da textura
+            var sphereGeometry = new THREE.SphereGeometry(raioSol, 32, 16);
+            var materialTeste = new THREE.MeshBasicMaterial({ map: texture });
+            sol = new THREE.Mesh(sphereGeometry, materialTeste);
+            sol.position.set(0, 0, 0);
+            scene.add(sol);
+        });
+
+        //carregue a textura do espaço e crie uma SkySphere para envolver a cena
+        const skySphereGeometry = new THREE.SphereGeometry(10000, 32, 32); //uma esfera grande para cobrir a cena
+        textureLoader.load('images/space_background.jpg', function(texture) {
+            const skySphereMaterial = new THREE.MeshBasicMaterial({
+                map: texture,
+                side: THREE.BackSide,  //para mostrar a textura do lado de dentro da esfera
+                color: 0xffffff  //garante que a textura mantenha suas cores originais
+            });
+            const skySphere = new THREE.Mesh(skySphereGeometry, skySphereMaterial);
+            scene.add(skySphere);
+        });
+
+        //inicializar os planetas
+        initPlanets(textureLoader, raioSol);
+        
+        //relógio para controle do tempo de animação
+        clock = new THREE.Clock();
+
+        //iniciar animação
+        animate();
+    }
+
+    //função de inicialização dos planetas
+    function initPlanets(textureLoader, raioSol) {
+        planetas.slice(1).forEach((planeta, index) => {
+            const geometry = new THREE.SphereGeometry(planeta.tamanho * 10, 32, 16);
+            textureLoader.load(planeta.textura, function(texture) {
+                const material = new THREE.MeshLambertMaterial({ map: texture });
+                const mesh = new THREE.Mesh(geometry, material);
+                
+                //ajustando a distância para a distância relativa do planeta
+                mesh.distance = raioSol + planeta.distancia * 200; //multiplicando por 200 para garantir uma distância maior entre os planetas
+                mesh.speed = planeta.velocidade / 100;  //ajustando a velocidade
+                mesh.rotationSpeed = planeta.rotacao;  //velocidade de rotação
+
+                //posicionando o planeta na órbita correta ao redor do Sol
+                mesh.position.set(mesh.distance, 0, 0);
+                
+                //adicionando o planeta à cena
+                planetasMeshes.push(mesh);
+                scene.add(mesh);
+
+                //adicionar a lua ao redor da Terra
+                if (planeta.nome === 'Terra') {
+                    addLua(textureLoader, mesh);
+                }
+
+                //adicionar anéis de Saturno
+                if (planeta.nome === 'Saturno') {
+                    addAneisSaturno(textureLoader, mesh);
+                }
+            });
+        });
+    }
+
+    function addAneisSaturno(textureLoader, saturnoMesh) {
+        const ringGeometry = new THREE.RingGeometry(100, 150, 64); //geometria do anel (raio interno e externo)
+        const ringMaterial = new THREE.MeshBasicMaterial({
+            map: textureLoader.load('images/rings_texture.jpg'), //textura do anel
+            side: THREE.DoubleSide,  //para que o anel seja visível de ambos os lados
+            transparent: true, //para que o anel tenha transparência
+            opacity: 0.6 //ajusta a opacidade do anel
+        });
+
+        const ringMesh = new THREE.Mesh(ringGeometry, ringMaterial);
+
+        //posiciona o anel em torno de Saturno
+        ringMesh.rotation.x = Math.PI / 2; //gira o anel para a posição correta
+        ringMesh.position.set(0, 0, 0); //ajusta a posição de Saturno
+
+        //adiciona o anel à cena junto com Saturno
+        saturnoMesh.add(ringMesh); //o anel será filho de Saturno, fazendo-o rotacionar com o planeta
+
+        //ajuste de escala e posicionamento
+        ringMesh.scale.set(1.2, 1.2, 1.2);  //aumenta o tamanho do anel
+    }
+
+    //função para adicionar a Lua ao redor da Terra
+    function addLua(textureLoader, terraMesh) {
+        const distanciaLua = 15; //distância da Lua em relação à Terra
+        const tamanhoLua = 0.27 * 10; //tamanho da Lua
+        const velocidadeOrbitaLua = 0.05; //velocidade de órbita da Lua ao redor da Terra
+
+        textureLoader.load('images/moon_texture.jpg', function(texture) {
+            const geometry = new THREE.SphereGeometry(tamanhoLua, 32, 16);
+            const material = new THREE.MeshLambertMaterial({ map: texture });
+            luaMesh = new THREE.Mesh(geometry, material);
+            
+            luaMesh.distanceFromTerra = distanciaLua;
+            luaMesh.speed = velocidadeOrbitaLua;
+
+            //posiciona a Lua inicial ao redor da Terra
+            luaMesh.position.set(terraMesh.position.x + distanciaLua, terraMesh.position.y, terraMesh.position.z);
+
+            //adiciona a Lua à cena
+            scene.add(luaMesh);
+        });
+    }
+
+    //atualizar posição e rotação dos planetas e da Lua
+    function updatePlanetas() {
+        const elapsedTime = clock.getElapsedTime();
+        planetasMeshes.forEach((planeta, index) => {
+            //calcular a nova posição com base no movimento circular(órbita)
+            const angle = elapsedTime * planetas[index + 1].velocidade / 1000; //ajusta o ângulo com base no tempo e velocidade
+            planeta.position.x = Math.cos(angle) * planeta.distance;
+            planeta.position.z = Math.sin(angle) * planeta.distance;
+
+            //adicionar rotação ao planeta
+            planeta.rotation.y += planeta.rotationSpeed; //rotação em torno do eixo Y
+
+            //atualizar a posição da Lua ao redor da Terra
+            if (planetas[index + 1].nome === 'Terra' && luaMesh) {
+                const angleLua = elapsedTime * luaMesh.speed;
+                luaMesh.position.x = planeta.position.x + Math.cos(angleLua) * luaMesh.distanceFromTerra;
+                luaMesh.position.z = planeta.position.z + Math.sin(angleLua) * luaMesh.distanceFromTerra;
+            }
+
+        });
+    }
+
+    //função de animação
+    function animate() {
+        requestAnimationFrame(animate);
+        controls.update();
+        updatePlanetas();
+        renderer.render(scene, camera);
+    }
+
+    init();
+</script>
+
+</body>
+</html>
