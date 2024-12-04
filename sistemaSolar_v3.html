@@ -7,32 +7,43 @@
     <link rel="stylesheet" href="css/base.css"/>
 </head>
 <body>
-
-<script src="js/Three.js"></script>
-<script src="js/OrbitControls.js"></script>
+    
+    <script src="js/Three.js"></script>
+    <script src="js/Detector.js"></script>
+    <script src="js/Stats.js"></script>
+    <script src="js/OrbitControls.js"></script>
+    <script src="js/THREEx.KeyboardState.js"></script>
+    <script src="js/THREEx.FullScreen.js"></script>
+    <script src="js/THREEx.WindowResize.js"></script>
 
 <div id="ThreeJS" style="position: absolute; width: 100%; height: 100%;"></div>
+
+<div id="infoBox" style="display:none;">
+    <!-- As informações do planeta serão inseridas aqui -->
+</div>
+
 
 <script>
     //variáveis globais
     let scene, camera, renderer, controls, clock;
     const planetas = [
-        {nome: 'Sol', distancia: 0, velocidade: 0, tamanho: 100, textura: 'images/sol_texture.jpg', rotacao: 0.01},
-        {nome: 'Mercúrio', distancia: 0.39, velocidade: 47.87, tamanho: 0.35, textura: 'images/mercury_texture.jpg', rotacao: 0.004},
-        {nome: 'Vênus', distancia: 0.72, velocidade: 35.02, tamanho: 0.87, textura: 'images/venus_texture.jpg', rotacao: 0.002},
-        {nome: 'Terra', distancia: 1.00, velocidade: 29.78, tamanho: 0.92, textura: 'images/earth_texture.jpg', rotacao: 0.01},
-        {nome: 'Marte', distancia: 1.52, velocidade: 24.07, tamanho: 0.49, textura: 'images/mars_texture.jpg', rotacao: 0.008},
-        {nome: 'Júpiter', distancia: 5.20, velocidade: 13.07, tamanho: 10.05, textura: 'images/jupiter_texture.jpg', rotacao: 0.02},
-        {nome: 'Saturno', distancia: 9.58, velocidade: 9.69, tamanho: 8.37, textura: 'images/saturno_texture.jpg', rotacao: 0.018},
-        {nome: 'Urano', distancia: 19.22, velocidade: 6.81, tamanho: 3.64, textura: 'images/urano_texture.jpg', rotacao: 0.016},
-        {nome: 'Netuno', distancia: 30.05, velocidade: 5.43, tamanho: 3.54, textura: 'images/netuno_texture.jpg', rotacao: 0.015},
-    ];
+    {nome: 'Sol', descricao: 'O Sol é a estrela mais quente do sistema solar.', distancia: 0, velocidade: 0, tamanho: 100, textura: 'images/sol_texture.jpg', rotacao: 0.01},
+    {nome: 'Mercúrio', descricao: 'Mercúrio é o planeta mais próximo do Sol.', distancia: 0.39, velocidade: 47.87, tamanho: 0.35, textura: 'images/mercury_texture.jpg', rotacao: 0.004},
+    {nome: 'Vênus', descricao: 'Vênus é o planeta com a rotação mais lenta do sistema solar.', distancia: 0.72, velocidade: 35.02, tamanho: 0.87, textura: 'images/venus_texture.jpg', rotacao: 0.002},
+    {nome: 'Terra', descricao: 'A Terra é o único planeta conhecido com vida.', distancia: 1.00, velocidade: 29.78, tamanho: 0.92, textura: 'images/earth_texture.jpg', rotacao: 0.01},
+    {nome: 'Marte', descricao: 'Marte é conhecido como o "Planeta Vermelho".', distancia: 1.52, velocidade: 24.07, tamanho: 0.49, textura: 'images/mars_texture.jpg', rotacao: 0.008},
+    {nome: 'Júpiter', descricao: 'Júpiter é o maior planeta do sistema solar.', distancia: 5.20, velocidade: 13.07, tamanho: 10.05, textura: 'images/jupiter_texture.jpg', rotacao: 0.02},
+    {nome: 'Saturno', descricao: 'Saturno é conhecido pelos seus impressionantes anéis.', distancia: 9.58, velocidade: 9.69, tamanho: 8.37, textura: 'images/saturno_texture.jpg', rotacao: 0.018},
+    {nome: 'Urano', descricao: 'Urano é o único planeta que gira de lado.', distancia: 19.22, velocidade: 6.81, tamanho: 3.64, textura: 'images/urano_texture.jpg', rotacao: 0.016},
+    {nome: 'Netuno', descricao: 'Netuno é o planeta mais distante do Sol.', distancia: 30.05, velocidade: 5.43, tamanho: 3.54, textura: 'images/netuno_texture.jpg', rotacao: 0.015},
+];
     const planetasMeshes = [];
     let luaMesh = null; //variável para armazenar a Lua
 
     //variáveis globais adicionais para o raycaster
     let raycaster = new THREE.Raycaster();
-    let mouse = new THREE.Vector2();
+    var targetList = [];
+    var projector, mouse = {x:0, y:0};
     let selectedPlanet = null;
 
     //função de inicialização
@@ -94,7 +105,11 @@
 
         //iniciar animação
         animate();
+
     }
+
+    projector = new THREE.Projector();
+    document.addEventListener( 'mousedown', onDocumentMouseDown, false );
 
     //função de inicialização dos planetas
     function initPlanets(textureLoader, raioSol) {
@@ -194,6 +209,51 @@
 
         });
     }
+
+    function onDocumentMouseDown(event) {
+        // Impede o comportamento padrão do evento (opcional)
+        // event.preventDefault();
+
+        console.log("Clique no planeta.");
+
+        // Atualiza as coordenadas do mouse em relação à tela
+        mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+        mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+        // Cria um vetor com a posição do mouse (coordenadas normalizadas)
+        var vector = new THREE.Vector3(mouse.x, mouse.y, 1);
+        projector.unprojectVector(vector,camera);
+
+        // Cria o raio a partir da posição da câmera e na direção do vetor calculado
+        var ray = new THREE.Raycaster(camera.position, vector.sub(camera.position).normalize());
+
+        // Verifica as interseções do raio com os planetas (objetos na cena)
+        var intersects = ray.intersectObjects(planetasMeshes);
+
+        // Se houver interseções
+        if (intersects.length > 0) {
+            console.log("Planeta clicado: ", intersects[0].object);
+
+            // Pega o planeta clicado
+            var planeta = intersects[0].object;
+
+            // Aqui você pode personalizar a lógica para mostrar a caixa de informações sobre o planeta
+            mostrarInfoPlaneta(planeta);  // Chama a função que exibe as informações do planeta
+        }
+    }
+
+    // Função para mostrar informações do planeta (exemplo)
+    function mostrarInfoPlaneta(planeta) {
+        var infoBox = document.getElementById('infoBox'); // Caixa de informações
+
+        // Atualizar o conteúdo da caixa com o nome e a descrição do planeta
+        infoBox.innerHTML = `
+            <h3>${planeta.nome}</h3>
+            <p>${planeta.descricao}</p>
+        `;
+        
+        infoBox.style.display = 'block'; // Exibir a caixa de informações
+    }   
 
     //função de animação
     function animate() {
