@@ -6,6 +6,7 @@ body
 	margin: 0px;
 	overflow: hidden;
 }
+
 #infoBox {
 	position: absolute;
 	top: 50%;
@@ -13,20 +14,37 @@ body
 	transform: translate(-50%, -50%);
 	background-color: rgba(0, 0, 0, 0.7);
 	color: white;
-	padding: 20px;
+	padding: 40px 30px 30px; /* Aumenta o espaçamento interno (top, horizontal, bottom) */
 	border-radius: 10px;
 	max-width: 300px;
 	text-align: center;
 	display: none;
 	z-index: 10;
+	box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
 #infoBox h3 {
-	margin: 0;
+	margin: 0 0 10px; /* Espaço entre o título e o texto */
 	font-size: 24px;
 }
 
 #infoBox p {
 	margin: 10px 0 0;
 	font-size: 16px;
+}
+
+#infoBox .closeButton {
+	position: absolute;
+	top: 10px; /* Mantém o botão no topo, fora do conteúdo */
+	right: 10px; /* Mantém o botão afastado da borda direita */
+	background: none;
+	border: none;
+	color: white;
+	font-size: 20px;
+	font-weight: bold;
+	cursor: pointer;
+}
+
+#infoBox .closeButton:hover {
+	color: red;
 }

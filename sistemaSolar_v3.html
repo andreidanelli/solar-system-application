@@ -232,7 +232,7 @@
 
         // Se houver interseções
         if (intersects.length > 0) {
-            console.log("Planeta clicado: ", intersects[0].object);
+            console.log("Planeta clicado: ", intersects[0].object.nome);
 
             // Pega o planeta clicado
             var planeta = intersects[0].object;
@@ -248,12 +248,20 @@
 
         // Atualizar o conteúdo da caixa com o nome e a descrição do planeta
         infoBox.innerHTML = `
+            <button class="closeButton" onclick="fecharInfoBox()">×</button>
             <h3>${planeta.nome}</h3>
             <p>${planeta.descricao}</p>
         `;
         
         infoBox.style.display = 'block'; // Exibir a caixa de informações
-    }   
+    }
+
+    // Função para fechar o infoBox
+    function fecharInfoBox() {
+        var infoBox = document.getElementById('infoBox');
+        infoBox.style.display = 'none'; // Ocultar a caixa de informações
+    }
+  
 
     //função de animação
     function animate() {
