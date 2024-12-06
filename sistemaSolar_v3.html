@@ -22,7 +22,6 @@
     <!-- As informações do planeta serão inseridas aqui -->
 </div>
 
-
 <script>
     //variáveis globais
     let scene, camera, renderer, controls, clock;
@@ -132,6 +131,8 @@
                 // Adicionando o planeta à cena
                 planetasMeshes.push(mesh);
                 scene.add(mesh);
+
+                criarOrbita(mesh.distance, 0xffffff);
 
                 // Adicionar Lua e anéis conforme necessário
                 if (planeta.nome === 'Terra') {
@@ -258,14 +259,23 @@
         infoBox.style.display = 'block';
     }
 
-
     // Função para fechar o infoBox
     function fecharInfoBox() {
         const infoBox = document.getElementById('infoBox');
         infoBox.style.display = 'none';
     }
 
-  
+    function criarOrbita(raio, cor) {
+        const orbitaGeometry = new THREE.RingGeometry(raio - 1, raio + 1, 64); // Uma linha fina representando a órbita
+        const orbitaMaterial = new THREE.MeshBasicMaterial({
+            color: cor,
+            side: THREE.DoubleSide,
+            transparent: true
+        });
+        const orbitaMesh = new THREE.Mesh(orbitaGeometry, orbitaMaterial);
+        orbitaMesh.rotation.x = Math.PI / 2; // Rotaciona para ficar no plano XZ
+        scene.add(orbitaMesh);
+    }
 
     //função de animação
     function animate() {
