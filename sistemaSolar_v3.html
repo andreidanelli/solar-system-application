@@ -113,36 +113,37 @@
 
     //função de inicialização dos planetas
     function initPlanets(textureLoader, raioSol) {
-        planetas.slice(1).forEach((planeta, index) => {
+        planetas.slice(1).forEach((planeta) => {
             const geometry = new THREE.SphereGeometry(planeta.tamanho * 10, 32, 16);
             textureLoader.load(planeta.textura, function(texture) {
                 const material = new THREE.MeshLambertMaterial({ map: texture });
                 const mesh = new THREE.Mesh(geometry, material);
-                
-                //ajustando a distância para a distância relativa do planeta
-                mesh.distance = raioSol + planeta.distancia * 200; //multiplicando por 200 para garantir uma distância maior entre os planetas
-                mesh.speed = planeta.velocidade / 100;  //ajustando a velocidade
-                mesh.rotationSpeed = planeta.rotacao;  //velocidade de rotação
 
-                //posicionando o planeta na órbita correta ao redor do Sol
+                // Adicionando propriedades customizadas ao Mesh
+                mesh.nome = planeta.nome;
+                mesh.descricao = `${planeta.descricao}`; // Substitua com descrições reais.
+
+                // Ajustando a distância e posicionamento
+                mesh.distance = raioSol + planeta.distancia * 200;
+                mesh.speed = planeta.velocidade / 100;
+                mesh.rotationSpeed = planeta.rotacao;
                 mesh.position.set(mesh.distance, 0, 0);
-                
-                //adicionando o planeta à cena
+
+                // Adicionando o planeta à cena
                 planetasMeshes.push(mesh);
                 scene.add(mesh);
 
-                //adicionar a lua ao redor da Terra
+                // Adicionar Lua e anéis conforme necessário
                 if (planeta.nome === 'Terra') {
                     addLua(textureLoader, mesh);
                 }
-
-                //adicionar anéis de Saturno
                 if (planeta.nome === 'Saturno') {
                     addAneisSaturno(textureLoader, mesh);
                 }
             });
         });
     }
+
 
     function addAneisSaturno(textureLoader, saturnoMesh) {
         const ringGeometry = new THREE.RingGeometry(100, 150, 64); //geometria do anel (raio interno e externo)
@@ -244,23 +245,26 @@
 
     // Função para mostrar informações do planeta (exemplo)
     function mostrarInfoPlaneta(planeta) {
-        var infoBox = document.getElementById('infoBox'); // Caixa de informações
+        const infoBox = document.getElementById('infoBox');
 
-        // Atualizar o conteúdo da caixa com o nome e a descrição do planeta
+        // Preenche o conteúdo da caixa com as informações do planeta
         infoBox.innerHTML = `
-            <button class="closeButton" onclick="fecharInfoBox()">×</button>
+            <button class="closeButton" onclick="fecharInfoBox()">X</button>
             <h3>${planeta.nome}</h3>
             <p>${planeta.descricao}</p>
         `;
-        
-        infoBox.style.display = 'block'; // Exibir a caixa de informações
+
+        // Mostra a caixa
+        infoBox.style.display = 'block';
     }
+
 
     // Função para fechar o infoBox
     function fecharInfoBox() {
-        var infoBox = document.getElementById('infoBox');
-        infoBox.style.display = 'none'; // Ocultar a caixa de informações
+        const infoBox = document.getElementById('infoBox');
+        infoBox.style.display = 'none';
     }
+
   
 
     //função de animação
