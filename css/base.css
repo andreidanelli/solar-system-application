@@ -8,43 +8,42 @@ body
 }
 
 #infoBox {
-	position: absolute;
-	top: 50%;
-	left: 50%;
-	transform: translate(-50%, -50%);
-	background-color: rgba(0, 0, 0, 0.7);
-	color: white;
-	padding: 40px 30px 30px; /* Aumenta o espaçamento interno (top, horizontal, bottom) */
-	border-radius: 10px;
-	max-width: 300px;
-	text-align: center;
-	display: none;
-	z-index: 10;
-	box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    position: absolute;
+    top: 2cm; /* Margem superior */
+    left: 2cm; /* Margem esquerda */
+    background-color: rgba(0, 0, 0, 0.8); /* Cor de fundo ajustada */
+    color: white;
+    padding: 50px 40px 40px; /* Aumenta o espaçamento interno */
+    border-radius: 12px; /* Mantém bordas arredondadas */
+    max-width: 400px; /* Aumenta a largura máxima */
+    text-align: center;
+    display: none;
+    z-index: 10;
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3); /* Sombra para destaque */
 }
 
 #infoBox h3 {
-	margin: 0 0 10px; /* Espaço entre o título e o texto */
-	font-size: 24px;
+    margin: 0 0 15px; /* Ajusta o espaçamento do título */
+    font-size: 26px; /* Tamanho maior para o título */
 }
 
 #infoBox p {
-	margin: 10px 0 0;
-	font-size: 16px;
+    margin: 10px 0 0;
+    font-size: 18px; /* Aumenta o tamanho do texto */
 }
 
 #infoBox .closeButton {
-	position: absolute;
-	top: 10px; /* Mantém o botão no topo, fora do conteúdo */
-	right: 10px; /* Mantém o botão afastado da borda direita */
-	background: none;
-	border: none;
-	color: white;
-	font-size: 20px;
-	font-weight: bold;
-	cursor: pointer;
+    position: absolute;
+    top: 15px; /* Ajusta a posição vertical */
+    right: 15px; /* Ajusta a posição horizontal */
+    background: none;
+    border: none;
+    color: white;
+    font-size: 22px; /* Tamanho maior para o botão */
+    font-weight: bold;
+    cursor: pointer;
 }
 
 #infoBox .closeButton:hover {
-	color: red;
+    color: red;
 }
